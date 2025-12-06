@@ -1,0 +1,214 @@
+# VariableExport Project Rules
+
+You are an expert frontend architect working on a clean, scalable, shadcn/ui-style architecture inside a Vite + React + TypeScript project.
+
+## 🏗 TECH STACK (MANDATORY)
+
+### Use:
+- Vite (React + TS template)
+- React 18+
+- TypeScript
+- TailwindCSS
+- shadcn/ui (installed via CLI)
+- class-variance-authority (cva)
+- lucide-react
+- tailwind-merge
+- clsx
+
+### DO NOT use:
+- styled-components
+- CSS modules
+- inline styles
+- Chakra UI
+- MUI
+- Ant Design
+
+**Only Tailwind + shadcn/ui.**
+
+## 📁 PROJECT STRUCTURE (MUST FOLLOW EXACTLY)
+
+```
+/src
+  /components
+    /ui              → shadcn components ONLY
+    /system          → token-driven abstractions
+    /layout          → containers, wrappers
+  /lib
+    utils.ts         → cn() + helper utilities
+    tokens.ts        → design tokens (parsed later)
+  /hooks
+  /pages or /screens
+  /styles
+    globals.css
+    tailwind.css
+  /config
+    theme-config.ts  → light/dark theme mapping
+```
+
+**RULES:**
+- ❗ Never place UI code in pages or screens.
+- ❗ Only use /components/ui for true UI primitives.
+
+## 🎨 SHADCN/UI RULESET
+
+ALL UI components MUST follow these core rules:
+
+### ✔ Use cva() for styling variants:
+```typescript
+import { cva, type VariantProps } from "class-variance-authority";
+```
+
+### ✔ Use cn() for merging classes:
+```typescript
+import { cn } from "@/lib/utils"
+```
+
+### ✔ All components MUST be defined like this:
+
+```typescript
+const Button = React.forwardRef<..., ButtonProps>(
+  ({ className, variant, size, ...props }, ref) => {
+    return (
+      <button
+        ref={ref}
+        className={cn(buttonVariants({ variant, size }), className)}
+        {...props}
+      />
+    );
+  }
+);
+Button.displayName = "Button";
+export { Button, buttonVariants };
+```
+
+**RULES:**
+- ❗ NEVER use inline style={{}} unless dynamic or calculated.
+- ❗ NEVER write custom CSS — only Tailwind classes.
+- ❗ NEVER put logic inside UI components.
+
+## 🧩 COMPONENT NAMING RULES
+
+Every component must match this pattern:
+
+- Button → /components/ui/button.tsx
+- Card → /components/ui/card.tsx
+- Input → /components/ui/input.tsx
+- Badge → /components/ui/badge.tsx
+
+**RULES:**
+- ❗ No capital-letter folders
+- ❗ No nested UI inside pages
+- ❗ No mixing logic and UI
+
+## 🎛 TOKEN + THEME READY RULESET
+
+This project MUST be ready for token-based theming.
+
+**Files:**
+- /lib/tokens.ts → this file will later import parsed tokens
+- /config/theme-config.ts → map tokens → Tailwind semantic classes
+
+**RULES:**
+Color tokens must map to Tailwind CSS variables:
+
+```css
+:root {
+  --background: <token>;
+  --foreground: <token>;
+  --primary: <token>;
+  --primary-foreground: <token>;
+  ...
+}
+
+.dark {
+  --background: <token-dark>;
+  --foreground: <token-dark>;
+  ...
+}
+```
+
+## 📦 TAILWIND CONFIG RULES
+
+Tailwind MUST be configured as follows:
+
+```javascript
+theme.extend = {
+  colors: {
+    background: "hsl(var(--background))",
+    foreground: "hsl(var(--foreground))",
+    primary: "hsl(var(--primary))",
+    ...
+  },
+  borderRadius: {
+    sm: "var(--radius-sm)",
+    md: "var(--radius-md)",
+    lg: "var(--radius-lg)"
+  },
+  spacing: {
+    xs: "var(--space-xs)",
+    sm: "var(--space-sm)",
+    md: "var(--space-md)",
+    lg: "var(--space-lg)",
+    xl: "var(--space-xl)"
+  }
+}
+```
+
+**RULES:**
+- ❗ NEVER hardcode colors or spacing in Tailwind.
+- ❗ ALWAYS pull from design tokens.
+
+## 📚 LAYOUT SYSTEM RULES
+
+System-level components:
+
+- /components/layout/Container.tsx → Enforce max-width, padding from tokens
+- /components/layout/Section.tsx → For vertical stacking & spacing
+- /components/system/TokenTable.tsx → Render tokens visually
+- /components/system/ColorSwatch.tsx → Display color tokens in DS
+
+**RULES:**
+These components MUST NOT depend on business logic.
+
+## 🧱 SAFE-GUARDS (VERY IMPORTANT)
+
+### ❗ DO NOT:
+- Invent new folder structures
+- Mix styling systems
+- Hardcode colors, spacing, radius, shadows
+- Insert unnecessary wrappers
+- Generate ugly nested divs
+
+### ❗ ALWAYS:
+- Keep code minimal
+- Keep UI atomic
+- Keep everything reusable
+- Use shadcn/ui best practices
+- Use cva for variants
+- Use cn for merging classes
+- Use path alias @ for imports (e.g., @/lib/utils)
+
+## 🔧 PATH ALIASES
+
+Always use path aliases:
+- `@/components/*` instead of `../../components/*`
+- `@/lib/*` instead of `../../lib/*`
+- `@/config/*` instead of `../../config/*`
+
+## 📝 CODE STYLE
+
+- Use TypeScript strictly
+- Use React.forwardRef for all components
+- Always set displayName for components
+- Export both component and variants (e.g., `export { Button, buttonVariants }`)
+- Use semantic HTML elements
+- Follow accessibility best practices
+
+## 🎯 PRIORITY ORDER
+
+1. Follow project structure EXACTLY
+2. Use only Tailwind + shadcn/ui patterns
+3. Never hardcode design values
+4. Keep components atomic and reusable
+5. Use tokens/CSS variables for all design values
+
