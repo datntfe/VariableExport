@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { cn } from '@/lib/utils'
 import { useTheme } from '@/lib/theme-context'
+import { useTokenStore } from '@/lib/token-store'
 
 export interface HeaderProps {
   onMenuClick?: () => void
@@ -18,10 +19,14 @@ export interface HeaderProps {
 
 const HEADER_HEIGHT = 64
 
-const BRANDS = ['Iris', 'Confidant', 'Default'] as const
-
 export const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
   const { theme, setBrand, setMode } = useTheme()
+  const { availableBrands } = useTokenStore()
+  
+  // Use available brands from tokens, fallback to default
+  const BRANDS = availableBrands.length > 0 
+    ? availableBrands.map(b => b.charAt(0).toUpperCase() + b.slice(1).toLowerCase())
+    : ['Default']
 
   return (
     <header
@@ -53,18 +58,22 @@ export const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Brand</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            {BRANDS.map((brand) => (
-              <DropdownMenuItem
-                key={brand}
-                onClick={() => setBrand(brand)}
-                className="flex items-center justify-between"
-              >
-                <span>{brand}</span>
-                {theme.brand === brand && (
-                  <Check className="ml-2 h-4 w-4" />
-                )}
-              </DropdownMenuItem>
-            ))}
+            {BRANDS.map((brand) => {
+              const brandKey = brand.toLowerCase()
+              const isSelected = theme.brand.toLowerCase() === brandKey
+              return (
+                <DropdownMenuItem
+                  key={brand}
+                  onClick={() => setBrand(brand)}
+                  className="flex items-center justify-between"
+                >
+                  <span>{brand}</span>
+                  {isSelected && (
+                    <Check className="ml-2 h-4 w-4" />
+                  )}
+                </DropdownMenuItem>
+              )
+            })}
           </DropdownMenuContent>
         </DropdownMenu>
 

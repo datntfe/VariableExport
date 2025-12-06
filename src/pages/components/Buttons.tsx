@@ -2,12 +2,34 @@ import * as React from 'react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { TokenTable } from '@/components/system/TokenTable'
-import { mockTokens } from '@/lib/tokens'
+import { useTokenStore } from '@/lib/token-store'
+import { getTokensByCategory } from '@/lib/token-helpers'
 
 export const Buttons: React.FC = () => {
-  const buttonTokens = mockTokens.filter(t => 
-    t.category === 'color' || t.category === 'radius' || t.category === 'spacing'
-  )
+  const { designTokens } = useTokenStore()
+  
+  // Get tokens used by buttons
+  const buttonTokens = React.useMemo(() => {
+    if (!designTokens) return []
+    return [
+      ...getTokensByCategory(designTokens, 'color'),
+      ...getTokensByCategory(designTokens, 'radius'),
+      ...getTokensByCategory(designTokens, 'spacing'),
+    ].slice(0, 15)
+  }, [designTokens])
+
+  if (!designTokens) {
+    return (
+      <div className="flex flex-col gap-8">
+        <div>
+          <h1 className="text-4xl font-bold mb-2">Buttons</h1>
+          <p className="text-muted-foreground">
+            No tokens loaded. Please import a Tokens Studio JSON file first.
+          </p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="flex flex-col gap-8">
@@ -65,11 +87,10 @@ export const Buttons: React.FC = () => {
               Buttons use tokens from multiple categories: colors (background, foreground),
               radius (border-radius), spacing (padding), and typography (font-size, font-weight).
             </p>
-            <TokenTable tokens={buttonTokens.slice(0, 10)} />
+            <TokenTable tokens={buttonTokens} />
           </div>
         </div>
       </div>
     </div>
   )
 }
-

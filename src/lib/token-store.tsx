@@ -1,18 +1,6 @@
 import * as React from 'react'
-import { DesignToken, parseTokensStudioJSON } from './token-parser'
-
-export interface DesignTokens {
-  borders: Record<string, DesignToken>
-  radius: Record<string, DesignToken>
-  icons: Record<string, DesignToken>
-  spacing: Record<string, DesignToken>
-  appearance: {
-    light: Record<string, DesignToken>
-    dark: Record<string, DesignToken>
-  }
-  colors: Record<string, DesignToken>
-  typography: Record<string, DesignToken>
-}
+import { DesignToken, DesignTokens, parseTokensStudioJSON } from './token-parser'
+import { useTheme } from './theme-context'
 
 interface TokenStoreContextType {
   rawTokens: any | null
@@ -20,6 +8,8 @@ interface TokenStoreContextType {
   setRawTokens: (tokens: any) => void
   parseTokens: (json: any) => void
   hasTokens: boolean
+  availableBrands: string[]
+  getTokensForBrand: (brand: string) => DesignTokens | null
 }
 
 const TokenStoreContext = React.createContext<TokenStoreContextType | undefined>(undefined)
@@ -42,6 +32,30 @@ export const TokenStoreProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     }
   }, [])
 
+  const getTokensForBrand = React.useCallback((brand: string): DesignTokens | null => {
+    if (!designTokens) return null
+    
+    // If no brand-specific tokens, return base tokens
+    if (!designTokens.brands || !designTokens.brands[brand]) {
+      return designTokens
+    }
+
+    const brandTokens = designTokens.brands[brand]
+    
+    // Merge brand-specific tokens with base tokens
+    return {
+      ...designTokens,
+      borders: { ...designTokens.borders, ...(brandTokens.borders || {}) },
+      radius: { ...designTokens.radius, ...(brandTokens.radius || {}) },
+      colors: { ...designTokens.colors, ...(brandTokens.colors || {}) },
+      typography: { ...designTokens.typography, ...(brandTokens.typography || {}) },
+    }
+  }, [designTokens])
+
+  const availableBrands = React.useMemo(() => {
+    return designTokens?.availableBrands || ['Default']
+  }, [designTokens])
+
   const value = React.useMemo(
     () => ({
       rawTokens,
@@ -49,8 +63,10 @@ export const TokenStoreProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       setRawTokens,
       parseTokens,
       hasTokens: designTokens !== null,
+      availableBrands,
+      getTokensForBrand,
     }),
-    [rawTokens, designTokens, setRawTokens, parseTokens]
+    [rawTokens, designTokens, setRawTokens, parseTokens, availableBrands, getTokensForBrand]
   )
 
   return <TokenStoreContext.Provider value={value}>{children}</TokenStoreContext.Provider>

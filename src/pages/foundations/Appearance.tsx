@@ -1,14 +1,29 @@
 import * as React from 'react'
 import { Card } from '@/components/ui/card'
-import { getTokensByGroup } from '@/lib/tokens'
+import { useTokenStore } from '@/lib/token-store'
+import { getTokensByGroup } from '@/lib/token-helpers'
 
 export const Appearance: React.FC = () => {
-  const semanticColors = getTokensByGroup('semantic')
+  const { designTokens } = useTokenStore()
+  const semanticColors = getTokensByGroup(designTokens, 'semantic')
   const lightColors = semanticColors.filter(t => t.mode === 'light')
   const darkColors = semanticColors.filter(t => t.mode === 'dark')
 
   const getColorValue = (name: string, mode: string) => {
     return semanticColors.find(t => t.name === name && t.mode === mode)?.value || '#000000'
+  }
+
+  if (!designTokens) {
+    return (
+      <div className="flex flex-col gap-8">
+        <div>
+          <h1 className="text-4xl font-bold mb-2">Appearance Modes</h1>
+          <p className="text-muted-foreground">
+            No tokens loaded. Please import a Tokens Studio JSON file first.
+          </p>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -24,23 +39,23 @@ export const Appearance: React.FC = () => {
       <div>
         <h2 className="text-2xl font-semibold mb-4">Light vs Dark Theme Comparison</h2>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Card className="p-6" style={{ backgroundColor: getColorValue('color.semantic.background', 'light') }}>
+          <Card className="p-6" style={{ backgroundColor: getColorValue('light.bg.default', 'light') }}>
             <div className="space-y-4">
-              <div className="text-lg font-semibold" style={{ color: getColorValue('color.semantic.foreground', 'light') }}>
+              <div className="text-lg font-semibold" style={{ color: getColorValue('light.fg.default', 'light') }}>
                 Light Mode
               </div>
               <div className="space-y-2">
-                <div className="text-sm" style={{ color: getColorValue('color.semantic.foreground', 'light') }}>
-                  Background: {String(getColorValue('color.semantic.background', 'light'))}
+                <div className="text-sm" style={{ color: getColorValue('light.fg.default', 'light') }}>
+                  Background: {String(getColorValue('light.bg.default', 'light'))}
                 </div>
-                <div className="text-sm" style={{ color: getColorValue('color.semantic.foreground', 'light') }}>
-                  Foreground: {String(getColorValue('color.semantic.foreground', 'light'))}
+                <div className="text-sm" style={{ color: getColorValue('light.fg.default', 'light') }}>
+                  Foreground: {String(getColorValue('light.fg.default', 'light'))}
                 </div>
                 <div
                   className="p-3 rounded-md"
                   style={{
-                    backgroundColor: getColorValue('color.semantic.primary', 'light'),
-                    color: '#ffffff',
+                    backgroundColor: getColorValue('light.accent.default', 'light'),
+                    color: getColorValue('light.accent.onAccent', 'light'),
                   }}
                 >
                   Primary Color
@@ -48,8 +63,8 @@ export const Appearance: React.FC = () => {
                 <div
                   className="p-3 rounded-md"
                   style={{
-                    backgroundColor: getColorValue('color.semantic.muted', 'light'),
-                    color: getColorValue('color.semantic.foreground', 'light'),
+                    backgroundColor: getColorValue('light.bg.muted', 'light'),
+                    color: getColorValue('light.fg.default', 'light'),
                   }}
                 >
                   Muted Background
@@ -58,23 +73,23 @@ export const Appearance: React.FC = () => {
             </div>
           </Card>
 
-          <Card className="p-6" style={{ backgroundColor: getColorValue('color.semantic.background', 'dark') }}>
+          <Card className="p-6" style={{ backgroundColor: getColorValue('dark.bg.default', 'dark') }}>
             <div className="space-y-4">
-              <div className="text-lg font-semibold" style={{ color: getColorValue('color.semantic.foreground', 'dark') }}>
+              <div className="text-lg font-semibold" style={{ color: getColorValue('dark.fg.default', 'dark') }}>
                 Dark Mode
               </div>
               <div className="space-y-2">
-                <div className="text-sm" style={{ color: getColorValue('color.semantic.foreground', 'dark') }}>
-                  Background: {String(getColorValue('color.semantic.background', 'dark'))}
+                <div className="text-sm" style={{ color: getColorValue('dark.fg.default', 'dark') }}>
+                  Background: {String(getColorValue('dark.bg.default', 'dark'))}
                 </div>
-                <div className="text-sm" style={{ color: getColorValue('color.semantic.foreground', 'dark') }}>
-                  Foreground: {String(getColorValue('color.semantic.foreground', 'dark'))}
+                <div className="text-sm" style={{ color: getColorValue('dark.fg.default', 'dark') }}>
+                  Foreground: {String(getColorValue('dark.fg.default', 'dark'))}
                 </div>
                 <div
                   className="p-3 rounded-md"
                   style={{
-                    backgroundColor: getColorValue('color.semantic.primary', 'dark'),
-                    color: '#000000',
+                    backgroundColor: getColorValue('dark.accent.default', 'dark'),
+                    color: getColorValue('dark.accent.onAccent', 'dark'),
                   }}
                 >
                   Primary Color
@@ -82,8 +97,8 @@ export const Appearance: React.FC = () => {
                 <div
                   className="p-3 rounded-md"
                   style={{
-                    backgroundColor: getColorValue('color.semantic.muted', 'dark'),
-                    color: getColorValue('color.semantic.foreground', 'dark'),
+                    backgroundColor: getColorValue('dark.bg.muted', 'dark'),
+                    color: getColorValue('dark.fg.default', 'dark'),
                   }}
                 >
                   Muted Background
@@ -126,4 +141,3 @@ export const Appearance: React.FC = () => {
     </div>
   )
 }
-

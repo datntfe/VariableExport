@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { DesignToken } from '@/lib/tokens'
+import { DesignToken } from '@/lib/token-parser'
 import { cn } from '@/lib/utils'
 
 export interface TokenTableProps {
@@ -42,7 +42,11 @@ export const TokenTable: React.FC<TokenTableProps> = ({
               <td className="px-4 py-3 text-sm">{token.category}</td>
               <td className="px-4 py-3 text-sm">{token.group}</td>
               <td className="px-4 py-3 text-sm">{token.type}</td>
-              <td className="px-4 py-3 text-sm font-mono">{String(token.value)}</td>
+              <td className="px-4 py-3 text-sm font-mono">
+                {Array.isArray(token.value) 
+                  ? token.value.join(' ') 
+                  : String(token.value)}
+              </td>
               <td className="px-4 py-3 text-sm">{token.mode || 'default'}</td>
             </tr>
           ))}

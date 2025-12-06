@@ -40,17 +40,23 @@ export const Radius: React.FC = () => {
                 <div
                   className="w-24 h-24 bg-primary flex items-center justify-center"
                   style={{
-                    borderRadius: token.value,
+                    borderRadius: Array.isArray(token.value) 
+                      ? token.value.join(' ') 
+                      : String(token.value),
                   }}
                 >
                   <span className="text-primary-foreground text-xs font-medium">
-                    {String(token.value)}
+                    {Array.isArray(token.value) 
+                      ? token.value.join(' ') 
+                      : String(token.value)}
                   </span>
                 </div>
                 <div className="text-center">
                   <div className="text-sm font-medium font-mono">{token.name}</div>
                   <div className="text-xs text-muted-foreground font-mono mt-1">
-                    {String(token.value)}
+                    {Array.isArray(token.value) 
+                      ? token.value.join(' ') 
+                      : String(token.value)}
                   </div>
                 </div>
               </div>

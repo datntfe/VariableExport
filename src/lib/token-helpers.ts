@@ -4,43 +4,66 @@ export const getTokensAsArray = (tokens: Record<string, DesignToken>): DesignTok
   return Object.values(tokens)
 }
 
-export const getTokensByCategory = (designTokens: DesignTokens | null, category: string): DesignToken[] => {
-  if (!designTokens) return []
+// Helper to get tokens with brand filtering
+const getFilteredTokens = (designTokens: DesignTokens | null, brand?: string): DesignTokens | null => {
+  if (!designTokens) return null
+  
+  // If no brand specified or no brand-specific tokens, return base tokens
+  if (!brand || !designTokens.brands || !designTokens.brands[brand]) {
+    return designTokens
+  }
+
+  const brandTokens = designTokens.brands[brand]
+  
+  // Merge brand-specific tokens with base tokens (brand tokens override base)
+  return {
+    ...designTokens,
+    borders: { ...designTokens.borders, ...(brandTokens.borders || {}) },
+    radius: { ...designTokens.radius, ...(brandTokens.radius || {}) },
+    colors: { ...designTokens.colors, ...(brandTokens.colors || {}) },
+    typography: { ...designTokens.typography, ...(brandTokens.typography || {}) },
+  }
+}
+
+export const getTokensByCategory = (designTokens: DesignTokens | null, category: string, brand?: string): DesignToken[] => {
+  const filtered = getFilteredTokens(designTokens, brand)
+  if (!filtered) return []
 
   switch (category) {
     case 'border':
-      return getTokensAsArray(designTokens.borders)
+      return getTokensAsArray(filtered.borders)
     case 'radius':
-      return getTokensAsArray(designTokens.radius)
+      return getTokensAsArray(filtered.radius)
     case 'icon':
-      return getTokensAsArray(designTokens.icons)
+      return getTokensAsArray(filtered.icons)
     case 'spacing':
-      return getTokensAsArray(designTokens.spacing)
+      return getTokensAsArray(filtered.spacing)
     case 'color':
       return [
-        ...getTokensAsArray(designTokens.colors),
-        ...getTokensAsArray(designTokens.appearance.light),
-        ...getTokensAsArray(designTokens.appearance.dark),
+        ...getTokensAsArray(filtered.colors),
+        ...getTokensAsArray(filtered.appearance.light),
+        ...getTokensAsArray(filtered.appearance.dark),
       ]
     case 'typography':
-      return getTokensAsArray(designTokens.typography)
+      return getTokensAsArray(filtered.typography)
     default:
       return []
   }
 }
 
-export const getTokensByGroup = (designTokens: DesignTokens | null, group: string): DesignToken[] => {
-  if (!designTokens) return []
+export const getTokensByGroup = (designTokens: DesignTokens | null, group: string, brand?: string): DesignToken[] => {
+  const filtered = getFilteredTokens(designTokens, brand)
+  if (!filtered) return []
 
   const allTokens: DesignToken[] = [
-    ...getTokensAsArray(designTokens.borders),
-    ...getTokensAsArray(designTokens.radius),
-    ...getTokensAsArray(designTokens.icons),
-    ...getTokensAsArray(designTokens.spacing),
-    ...getTokensAsArray(designTokens.colors),
-    ...getTokensAsArray(designTokens.appearance.light),
-    ...getTokensAsArray(designTokens.appearance.dark),
-    ...getTokensAsArray(designTokens.typography),
+    ...getTokensAsArray(filtered.borders),
+    ...getTokensAsArray(filtered.radius),
+    ...getTokensAsArray(filtered.icons),
+    ...getTokensAsArray(filtered.spacing),
+    ...getTokensAsArray(filtered.colors),
+    ...getTokensAsArray(filtered.appearance.light),
+    ...getTokensAsArray(filtered.appearance.dark),
+    ...getTokensAsArray(filtered.typography),
   ]
 
   return allTokens.filter(token => token.group === group)
@@ -104,7 +127,17 @@ export const getTotalTokenCount = (designTokens: DesignTokens | null): number =>
     Object.keys(designTokens.colors).length +
     Object.keys(designTokens.appearance.light).length +
     Object.keys(designTokens.appearance.dark).length +
-    Object.keys(designTokens.typography).length
+    Object.keys(designTokens.typography).length +
+    (designTokens.shadows ? Object.keys(designTokens.shadows).length : 0)
+  )
+}
+
+export const getColorFamily = (designTokens: DesignTokens | null, family: string, brand?: string): DesignToken[] => {
+  const filtered = getFilteredTokens(designTokens, brand)
+  if (!filtered) return []
+  
+  return Object.values(filtered.colors).filter(token => 
+    token.name.includes(`colors.${family}.`)
   )
 }
 

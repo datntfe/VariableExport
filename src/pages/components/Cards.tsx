@@ -2,12 +2,33 @@ import * as React from 'react'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { TokenTable } from '@/components/system/TokenTable'
-import { mockTokens } from '@/lib/tokens'
+import { useTokenStore } from '@/lib/token-store'
+import { getTokensByCategory } from '@/lib/token-helpers'
 
 export const Cards: React.FC = () => {
-  const cardTokens = mockTokens.filter(t => 
-    t.category === 'color' || t.category === 'radius' || t.category === 'spacing'
-  )
+  const { designTokens } = useTokenStore()
+  
+  const cardTokens = React.useMemo(() => {
+    if (!designTokens) return []
+    return [
+      ...getTokensByCategory(designTokens, 'color'),
+      ...getTokensByCategory(designTokens, 'radius'),
+      ...getTokensByCategory(designTokens, 'spacing'),
+    ].slice(0, 15)
+  }, [designTokens])
+
+  if (!designTokens) {
+    return (
+      <div className="flex flex-col gap-8">
+        <div>
+          <h1 className="text-4xl font-bold mb-2">Cards</h1>
+          <p className="text-muted-foreground">
+            No tokens loaded. Please import a Tokens Studio JSON file first.
+          </p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="flex flex-col gap-8">
@@ -69,11 +90,10 @@ export const Cards: React.FC = () => {
             <p className="text-sm text-muted-foreground mb-4">
               Cards use tokens for background color, border-radius, shadow, and internal spacing.
             </p>
-            <TokenTable tokens={cardTokens.slice(0, 10)} />
+            <TokenTable tokens={cardTokens} />
           </div>
         </div>
       </div>
     </div>
   )
 }
-

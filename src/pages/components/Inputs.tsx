@@ -2,12 +2,34 @@ import * as React from 'react'
 import { Input } from '@/components/ui/input'
 import { Card } from '@/components/ui/card'
 import { TokenTable } from '@/components/system/TokenTable'
-import { mockTokens } from '@/lib/tokens'
+import { useTokenStore } from '@/lib/token-store'
+import { getTokensByCategory } from '@/lib/token-helpers'
 
 export const Inputs: React.FC = () => {
-  const inputTokens = mockTokens.filter(t => 
-    t.category === 'color' || t.category === 'radius' || t.category === 'spacing' || t.category === 'border'
-  )
+  const { designTokens } = useTokenStore()
+  
+  const inputTokens = React.useMemo(() => {
+    if (!designTokens) return []
+    return [
+      ...getTokensByCategory(designTokens, 'color'),
+      ...getTokensByCategory(designTokens, 'radius'),
+      ...getTokensByCategory(designTokens, 'spacing'),
+      ...getTokensByCategory(designTokens, 'border'),
+    ].slice(0, 15)
+  }, [designTokens])
+
+  if (!designTokens) {
+    return (
+      <div className="flex flex-col gap-8">
+        <div>
+          <h1 className="text-4xl font-bold mb-2">Inputs</h1>
+          <p className="text-muted-foreground">
+            No tokens loaded. Please import a Tokens Studio JSON file first.
+          </p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="flex flex-col gap-8">
@@ -47,11 +69,10 @@ export const Inputs: React.FC = () => {
             <p className="text-sm text-muted-foreground mb-4">
               Inputs use tokens for border width, border color, border-radius, padding, and typography.
             </p>
-            <TokenTable tokens={inputTokens.slice(0, 10)} />
+            <TokenTable tokens={inputTokens} />
           </div>
         </div>
       </div>
     </div>
   )
 }
-

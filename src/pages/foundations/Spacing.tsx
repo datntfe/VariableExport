@@ -40,10 +40,19 @@ export const Spacing: React.FC = () => {
                 <div className="text-sm font-medium font-mono w-32">{token.name}</div>
                 <div
                   className="bg-primary h-8 flex items-center justify-center px-2"
-                  style={{ width: token.value, minWidth: token.value }}
+                  style={{ 
+                    width: Array.isArray(token.value) 
+                      ? token.value[0] 
+                      : String(token.value), 
+                    minWidth: Array.isArray(token.value) 
+                      ? token.value[0] 
+                      : String(token.value) 
+                  }}
                 >
                   <span className="text-primary-foreground text-xs font-mono">
-                    {String(token.value)}
+                    {Array.isArray(token.value) 
+                      ? token.value.join(' ') 
+                      : String(token.value)}
                   </span>
                 </div>
               </div>
