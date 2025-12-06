@@ -2,7 +2,7 @@ import * as React from 'react'
 import { TokenTable } from '@/components/system/TokenTable'
 import { Card } from '@/components/ui/card'
 import { useTokenStore } from '@/lib/token-store'
-import { getTokensByCategory } from '@/lib/token-helpers'
+import { getTokensByCategory, formatTokenDisplayName } from '@/lib/token-helpers'
 
 export const Spacing: React.FC = () => {
   const { designTokens } = useTokenStore()
@@ -32,32 +32,63 @@ export const Spacing: React.FC = () => {
       </div>
 
       <div>
-        <h2 className="text-2xl font-semibold mb-4">Horizontal Spacing Preview</h2>
+        <h2 className="text-2xl font-semibold mb-4">Visual Scale Preview</h2>
         <div className="space-y-4">
-          {spacingTokens.map((token) => (
-            <Card key={token.name} className="p-4">
-              <div className="flex items-center gap-4">
-                <div className="text-sm font-medium font-mono w-32">{token.name}</div>
-                <div
-                  className="bg-primary h-8 flex items-center justify-center px-2"
-                  style={{ 
-                    width: Array.isArray(token.value) 
-                      ? token.value[0] 
-                      : String(token.value), 
-                    minWidth: Array.isArray(token.value) 
-                      ? token.value[0] 
-                      : String(token.value) 
-                  }}
-                >
-                  <span className="text-primary-foreground text-xs font-mono">
-                    {Array.isArray(token.value) 
-                      ? token.value.join(' ') 
-                      : String(token.value)}
-                  </span>
-                </div>
-              </div>
-            </Card>
-          ))}
+          {(() => {
+            // Calculate max value for scaling
+            const maxValue = Math.max(...spacingTokens.map(t => {
+              const v = Array.isArray(t.value) ? t.value[0] : String(t.value)
+              return parseFloat(v.replace(/[^\d.-]/g, '')) || 0
+            }))
+            const scaleFactor = maxValue > 0 ? Math.min(600 / maxValue, 15) : 1
+            
+            return spacingTokens.map((token) => {
+              const valueStr = Array.isArray(token.value) 
+                ? token.value[0] 
+                : String(token.value)
+              const numericValue = parseFloat(valueStr.replace(/[^\d.-]/g, '')) || 0
+              const displayWidth = numericValue * scaleFactor
+              
+              return (
+                <Card key={token.name} className="p-4">
+                  <div className="flex flex-col gap-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex flex-col">
+                        <div className="text-sm font-medium">{formatTokenDisplayName(token.name)}</div>
+                        <div className="text-xs text-muted-foreground font-mono">{token.name}</div>
+                      </div>
+                      <div className="text-sm font-mono text-muted-foreground">
+                        {Array.isArray(token.value) 
+                          ? token.value.join(' ') 
+                          : String(token.value)}
+                      </div>
+                    </div>
+                    <div className="relative w-full bg-muted/50 rounded-md p-2">
+                      <div className="flex items-center gap-2">
+                        <div
+                          className="bg-primary h-10 rounded flex items-center justify-center transition-all shrink-0"
+                          style={{ 
+                            width: `${Math.max(displayWidth, 20)}px`,
+                            minWidth: '20px',
+                          }}
+                        >
+                          <span className="text-primary-foreground text-xs font-medium px-2 whitespace-nowrap">
+                            {numericValue}px
+                          </span>
+                        </div>
+                        <div className="flex-1 h-1 bg-border rounded-full relative">
+                          <div 
+                            className="absolute top-0 left-0 h-full bg-primary/30 rounded-full"
+                            style={{ width: `${(numericValue / maxValue) * 100}%` }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </Card>
+              )
+            })
+          })()}
         </div>
       </div>
 
@@ -65,19 +96,35 @@ export const Spacing: React.FC = () => {
         <h2 className="text-2xl font-semibold mb-4">Stack Preview (Vertical Spacing)</h2>
         <Card className="p-6">
           <div className="space-y-4">
-            {spacingTokens.slice(0, 4).map((token, index) => (
-              <div key={token.name} className="flex items-center gap-4">
-                <div className="text-sm font-medium font-mono w-32">{token.name}</div>
-                <div
-                  className="bg-primary h-12 rounded-md flex items-center justify-center px-4"
-                  style={{ width: '100%' }}
-                >
-                  <span className="text-primary-foreground text-xs">
-                    Element with {String(token.value)} spacing
-                  </span>
+            {spacingTokens.slice(0, 5).map((token) => {
+              const valueStr = Array.isArray(token.value) 
+                ? token.value[0] 
+                : String(token.value)
+              const numericValue = parseFloat(valueStr.replace(/[^\d.-]/g, '')) || 0
+              
+              return (
+                <div key={token.name} className="flex items-center gap-4">
+                  <div className="flex flex-col w-32">
+                    <div className="text-sm font-medium">{formatTokenDisplayName(token.name)}</div>
+                    <div className="text-xs text-muted-foreground font-mono">{token.name}</div>
+                  </div>
+                  <div className="flex-1 flex items-center gap-2">
+                    <div
+                      className="bg-muted h-12 rounded-md flex items-center justify-center border-2 border-dashed border-border"
+                      style={{ 
+                        width: '100%',
+                        paddingLeft: valueStr,
+                        paddingRight: valueStr,
+                      }}
+                    >
+                      <span className="text-xs text-muted-foreground">
+                        Padding: {valueStr} (left & right)
+                      </span>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         </Card>
       </div>

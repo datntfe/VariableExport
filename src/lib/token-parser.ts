@@ -128,6 +128,22 @@ class TokenResolver {
           resolved = resolved.replace(fullMatch, String(refValue))
         })
 
+        // Check if result is multi-value (space-separated) after resolving references
+        // This handles cases like "{borderRadius.sm} {borderRadius.lg}" -> "4 8"
+        const hasSpace = resolved.includes(' ') && !resolved.includes('rgba') && !resolved.includes('rgb')
+        if (hasSpace) {
+          // Split and resolve each part individually
+          const parts = resolved.split(' ').filter(p => p.trim())
+          const resolvedParts = parts.map(part => {
+            // If part still has references, resolve recursively
+            if (part.match(/\{([^}]+)\}/)) {
+              return this.resolveValue(part, type)
+            }
+            return part
+          })
+          return resolvedParts.join(' ')
+        }
+
         // Handle expressions with operators
         if (resolved.includes('*')) {
           const parts = resolved.split('*').map(p => p.trim())
@@ -179,16 +195,20 @@ class TokenResolver {
         }
       }
 
-      // Check for multi-value (space-separated)
-      if (value.includes(' ') && refs.length > 0) {
+      // Check for multi-value (space-separated) without references
+      if (value.includes(' ') && !value.includes('rgba') && !value.includes('rgb')) {
         const parts = value.split(' ').filter(p => p.trim())
-        const resolvedParts = parts.map(part => {
-          if (part.match(/\{([^}]+)\}/)) {
-            return this.resolveValue(part, type)
-          }
-          return part
-        })
-        return resolvedParts.join(' ')
+        // If any part has references, resolve them
+        const hasRefs = parts.some(part => part.match(/\{([^}]+)\}/))
+        if (hasRefs) {
+          const resolvedParts = parts.map(part => {
+            if (part.match(/\{([^}]+)\}/)) {
+              return this.resolveValue(part, type)
+            }
+            return part
+          })
+          return resolvedParts.join(' ')
+        }
       }
     }
 
@@ -250,6 +270,17 @@ export function parseTokensStudioJSON(json: any): DesignTokens {
   // Combine all tokens for resolution
   const allTokens = { ...coreFlat, ...lightFlat, ...darkFlat, ...themeFlat }
 
+  // Helper to ensure dimension values have units
+  const ensureDimensionUnit = (value: any): string => {
+    const str = String(value).trim()
+    // If it's a pure number (no unit), add 'px'
+    if (/^\d+(\.\d+)?$/.test(str)) {
+      return `${str}px`
+    }
+    // If it already has a unit or is an expression, return as-is
+    return str
+  }
+
   // Parse borders (borderWidth)
   const parseBorders = (tokens: Record<string, any>): Record<string, DesignToken> => {
     const borders: Record<string, DesignToken> = {}
@@ -257,13 +288,14 @@ export function parseTokensStudioJSON(json: any): DesignTokens {
     Object.entries(tokens).forEach(([key, token]: [string, any]) => {
       if (token.$type === 'borderWidth' || 
           (key.toLowerCase().includes('border') && key.toLowerCase().includes('width'))) {
-        const value = resolver.resolveToken(key) || token.$value || '0px'
+        const resolvedValue = resolver.resolveToken(key) || token.$value || '0'
+        const value = ensureDimensionUnit(resolvedValue)
         borders[key] = {
           name: key,
           category: 'border',
           group: 'border-width',
           type: token.$type || 'dimension',
-          value: String(value),
+          value: value,
           rawValue: token,
         }
       }
@@ -278,17 +310,25 @@ export function parseTokensStudioJSON(json: any): DesignTokens {
     
     Object.entries(tokens).forEach(([key, token]: [string, any]) => {
       if (token.$type === 'borderRadius' || key.toLowerCase().includes('radius')) {
-        const value = resolver.resolveToken(key) || token.$value || '0px'
+        const resolvedValue = resolver.resolveToken(key) || token.$value || '0'
         // Check if multi-value
-        const valueStr = String(value)
+        const valueStr = String(resolvedValue)
         const isMultiValue = valueStr.includes(' ') && !valueStr.includes('rgba') && !valueStr.includes('rgb')
+        
+        let finalValue: string | string[]
+        if (isMultiValue) {
+          // For multi-value, ensure each part has units
+          finalValue = valueStr.split(' ').map(part => ensureDimensionUnit(part.trim())).filter(Boolean)
+        } else {
+          finalValue = ensureDimensionUnit(resolvedValue)
+        }
         
         radius[key] = {
           name: key,
           category: 'radius',
           group: 'border-radius',
           type: token.$type || 'dimension',
-          value: isMultiValue ? valueStr.split(' ') : valueStr,
+          value: finalValue,
           rawValue: token,
         }
       }
@@ -324,17 +364,25 @@ export function parseTokensStudioJSON(json: any): DesignTokens {
     
     Object.entries(tokens).forEach(([key, token]: [string, any]) => {
       if (token.$type === 'spacing' || key.toLowerCase().includes('spacing')) {
-        const value = resolver.resolveToken(key) || token.$value || '0px'
-        const valueStr = String(value)
+        const resolvedValue = resolver.resolveToken(key) || token.$value || '0'
+        const valueStr = String(resolvedValue)
         // Check if multi-value
         const isMultiValue = valueStr.includes(' ') && !valueStr.includes('rgba') && !valueStr.includes('rgb')
+        
+        let finalValue: string | string[]
+        if (isMultiValue) {
+          // For multi-value, ensure each part has units
+          finalValue = valueStr.split(' ').map(part => ensureDimensionUnit(part.trim())).filter(Boolean)
+        } else {
+          finalValue = ensureDimensionUnit(resolvedValue)
+        }
         
         spacing[key] = {
           name: key,
           category: 'spacing',
           group: 'spacing-scale',
           type: token.$type || 'dimension',
-          value: isMultiValue ? valueStr.split(' ') : valueStr,
+          value: finalValue,
           rawValue: token,
         }
       }

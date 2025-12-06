@@ -2,7 +2,7 @@ import * as React from 'react'
 import { TokenTable } from '@/components/system/TokenTable'
 import { Card } from '@/components/ui/card'
 import { useTokenStore } from '@/lib/token-store'
-import { getTokensByCategory } from '@/lib/token-helpers'
+import { getTokensByCategory, formatTokenDisplayName } from '@/lib/token-helpers'
 
 export const Radius: React.FC = () => {
   const { designTokens } = useTokenStore()
@@ -52,11 +52,14 @@ export const Radius: React.FC = () => {
                   </span>
                 </div>
                 <div className="text-center">
-                  <div className="text-sm font-medium font-mono">{token.name}</div>
+                  <div className="text-sm font-medium">{formatTokenDisplayName(token.name)}</div>
                   <div className="text-xs text-muted-foreground font-mono mt-1">
                     {Array.isArray(token.value) 
                       ? token.value.join(' ') 
                       : String(token.value)}
+                  </div>
+                  <div className="text-xs text-muted-foreground font-mono mt-0.5 opacity-60">
+                    {token.name}
                   </div>
                 </div>
               </div>

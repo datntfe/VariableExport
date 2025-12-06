@@ -141,3 +141,43 @@ export const getColorFamily = (designTokens: DesignTokens | null, family: string
   )
 }
 
+/**
+ * Format token name for display
+ * Extracts the last part of the token path for cleaner display
+ * Examples:
+ * - "borderWidth.0" -> "0"
+ * - "borderWidth.1" -> "1"
+ * - "borderRadius.sm" -> "sm"
+ * - "borderRadius.lg" -> "lg"
+ * - "borderRadius.multi-value" -> "multi-value"
+ * - "colors.primary.500" -> "500"
+ */
+export const formatTokenDisplayName = (tokenName: string): string => {
+  const parts = tokenName.split('.')
+  return parts[parts.length - 1] || tokenName
+}
+
+/**
+ * Format token name with category prefix for better readability
+ * Examples:
+ * - "borderWidth.0" -> "Border Width 0"
+ * - "borderRadius.sm" -> "Radius sm"
+ */
+export const formatTokenDisplayNameWithCategory = (token: DesignToken): string => {
+  const lastPart = formatTokenDisplayName(token.name)
+  
+  // Capitalize first letter and format based on category
+  switch (token.category) {
+    case 'border':
+      return `Border Width ${lastPart}`
+    case 'radius':
+      return `Radius ${lastPart}`
+    case 'icon':
+      return `Icon Size ${lastPart}`
+    case 'spacing':
+      return `Spacing ${lastPart}`
+    default:
+      return lastPart
+  }
+}
+
